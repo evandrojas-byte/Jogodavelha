@@ -1,0 +1,453 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo da Velha</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      color: white;
+      background: linear-gradient(135deg, #10172a, #253b67);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 430px;
+      padding: 25px;
+      background: #18243b;
+      border: 1px solid #344867;
+      border-radius: 22px;
+      box-shadow: 0 20px 60px #0005;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #a8bad5;
+      margin-bottom: 25px;
+      font-size: 14px;
+    }
+
+    .scores {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .player {
+      padding: 15px 8px;
+      text-align: center;
+      border-radius: 13px;
+      background: #101a2d;
+      border: 2px solid transparent;
+    }
+
+    .player.active {
+      border-color: #34d399;
+    }
+
+    .symbol {
+      display: block;
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .x {
+      color: #60a5fa;
+    }
+
+    .o {
+      color: #fbbf24;
+    }
+
+    .player p {
+      font-size: 13px;
+      color: #b8c6dc;
+    }
+
+    .score {
+      margin-top: 8px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    #status {
+      min-height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #6ee7b7;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      border: none;
+      border-radius: 13px;
+      background: #283957;
+      font-size: clamp(42px, 12vw, 65px);
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .cell:hover:enabled {
+      background: #354b70;
+      transform: scale(1.03);
+    }
+
+    .cell:disabled {
+      cursor: default;
+    }
+
+    .cell.winner {
+      background: #12664f;
+      outline: 2px solid #34d399;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button.action {
+      padding: 13px 8px;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .restart {
+      background: #60a5fa;
+      color: #10172a;
+    }
+
+    .reset {
+      background: #344867;
+      color: white;
+    }
+
+    .online {
+      width: 100%;
+      margin-top: 12px;
+      padding: 13px;
+      background: #34d399;
+      color: #08291f;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .note {
+      color: #9fb0ca;
+      font-size: 12px;
+      text-align: center;
+      line-height: 1.6;
+      margin-top: 18px;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1>JOGO DA VELHA</h1>
+    <p class="subtitle">Desafie alguém e vença!</p>
+
+    <div class="scores">
+      <div class="player active" id="playerX">
+        <span class="symbol x">X</span>
+        <p>Jogador 1</p>
+        <div class="score" id="scoreX">0</div>
+      </div>
+
+      <div class="player" id="playerO">
+        <span class="symbol o">O</span>
+        <p>Jogador 2</p>
+        <div class="score" id="scoreO">0</div>
+      </div>
+    </div>
+
+    <div id="status" role="status" aria-live="polite">
+      Vez do Jogador 1 (X)
+    </div>
+
+    <div class="board" id="board">
+      <button class="cell" data-index="0" aria-label="Casa 1"></button>
+      <button class="cell" data-index="1" aria-label="Casa 2"></button>
+      <button class="cell" data-index="2" aria-label="Casa 3"></button>
+      <button class="cell" data-index="3" aria-label="Casa 4"></button>
+      <button class="cell" data-index="4" aria-label="Casa 5"></button>
+      <button class="cell" data-index="5" aria-label="Casa 6"></button>
+      <button class="cell" data-index="6" aria-label="Casa 7"></button>
+      <button class="cell" data-index="7" aria-label="Casa 8"></button>
+      <button class="cell" data-index="8" aria-label="Casa 9"></button>
+    </div>
+
+    <div class="buttons">
+      <button class="action restart" id="restart">
+        Nova rodada
+      </button>
+
+      <button class="action reset" id="reset">
+        Zerar placar
+      </button>
+    </div>
+
+    <div class="buttons" style="margin-top:12px">
+      <button class="action restart" id="createRoom">Criar sala online</button>
+      <button class="action reset" id="joinRoom">Entrar com código</button>
+    </div>
+    <div id="onlinePanel" style="display:none;margin-top:12px;padding:14px;background:#101a2d;border-radius:12px">
+      <p id="roomInfo" style="text-align:center;line-height:1.6"></p>
+      <button class="online" id="copyRoom" style="margin-top:8px">Copiar código da sala</button>
+      <p id="connectionInfo" style="text-align:center;color:#a8bad5;font-size:12px;margin-top:10px">Aguardando conexão...</p>
+    </div>
+    <p class="note" id="note">
+      Modo local: dois jogadores no mesmo dispositivo. Para jogar pela internet, crie uma sala e envie o código ao adversário.
+    </p>
+  </main>
+
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script>
+    const cells = [...document.querySelectorAll(".cell")];
+    const statusText = document.getElementById("status");
+    const connectionInfo = document.getElementById("connectionInfo");
+    const onlinePanel = document.getElementById("onlinePanel");
+    const roomInfo = document.getElementById("roomInfo");
+    let board = Array(9).fill("");
+    let currentPlayer = "X";
+    let gameOver = false;
+    let scoreX = 0, scoreO = 0;
+    let peer = null, connection = null;
+    let onlineMode = false, isHost = false, mySymbol = "X";
+    let roomCode = "";
+
+    const combinations = [
+      [0,1,2],[3,4,5],[6,7,8],[0,3,6],
+      [1,4,7],[2,5,8],[0,4,8],[2,4,6]
+    ];
+
+    function getWinner() {
+      for (const combination of combinations) {
+        const [a,b,c] = combination;
+        if (board[a] && board[a] === board[b] && board[a] === board[c])
+          return { player: board[a], combination };
+      }
+      return null;
+    }
+
+    function render() {
+      cells.forEach((cell, i) => {
+        cell.textContent = board[i];
+        cell.classList.remove("x","o","winner");
+        if (board[i]) cell.classList.add(board[i].toLowerCase());
+        const localTurn = !onlineMode || currentPlayer === mySymbol;
+        cell.disabled = gameOver || board[i] !== "" || !localTurn ||
+          (onlineMode && (!connection || connection.open !== true));
+      });
+      document.getElementById("playerX").classList.toggle("active", !gameOver && currentPlayer === "X");
+      document.getElementById("playerO").classList.toggle("active", !gameOver && currentPlayer === "O");
+      document.getElementById("scoreX").textContent = scoreX;
+      document.getElementById("scoreO").textContent = scoreO;
+    }
+
+    function updateStatus() {
+      if (gameOver) return;
+      statusText.textContent = "Vez do Jogador " + (currentPlayer === "X" ? "1 (X)" : "2 (O)");
+    }
+
+    function applyMove(index, symbol, broadcast) {
+      if (gameOver || board[index] !== "" || currentPlayer !== symbol) return;
+      board[index] = symbol;
+      const result = getWinner();
+      if (result) {
+        gameOver = true;
+        result.combination.forEach(i => cells[i].classList.add("winner"));
+        if (symbol === "X") scoreX++; else scoreO++;
+        statusText.textContent = "🏆 Jogador " + (symbol === "X" ? "1 (X)" : "2 (O)") + " venceu!";
+      } else if (board.every(v => v !== "")) {
+        gameOver = true;
+        statusText.textContent = "🤝 Empate!";
+      } else {
+        currentPlayer = symbol === "X" ? "O" : "X";
+        updateStatus();
+      }
+      render();
+      if (broadcast && connection && connection.open)
+        connection.send({ type:"move", index, symbol });
+      if (gameOver && broadcast && connection && connection.open)
+        connection.send({ type:"score", scoreX, scoreO });
+    }
+
+    function play(index) {
+      if (onlineMode) {
+        if (!connection || !connection.open || currentPlayer !== mySymbol || board[index] !== "" || gameOver) return;
+        applyMove(index, mySymbol, true);
+      } else {
+        applyMove(index, currentPlayer, false);
+      }
+    }
+
+    function newRound(broadcast = true) {
+      board = Array(9).fill("");
+      currentPlayer = "X";
+      gameOver = false;
+      statusText.textContent = "Vez do Jogador 1 (X)";
+      render();
+      if (broadcast && onlineMode && connection && connection.open)
+        connection.send({ type:"restart" });
+    }
+
+    function handleData(data) {
+      if (!data || typeof data !== "object") return;
+      if (data.type === "move" && !isHost) {
+        applyMove(data.index, data.symbol, false);
+      } else if (data.type === "move" && isHost) {
+        if (data.symbol === "O" && currentPlayer === "O" &&
+            Number.isInteger(data.index) && data.index >= 0 && data.index < 9)
+          applyMove(data.index, "O", true);
+      } else if (data.type === "state") {
+        board = data.board;
+        currentPlayer = data.currentPlayer;
+        gameOver = data.gameOver;
+        scoreX = data.scoreX;
+        scoreO = data.scoreO;
+        statusText.textContent = data.status;
+        render();
+      } else if (data.type === "restart") {
+        newRound(false);
+      } else if (data.type === "score") {
+        scoreX = data.scoreX; scoreO = data.scoreO; render();
+      }
+    }
+
+    function sendState() {
+      if (connection && connection.open) connection.send({
+        type:"state", board, currentPlayer, gameOver, scoreX, scoreO,
+        status:statusText.textContent
+      });
+    }
+
+    function setupConnection(conn) {
+      connection = conn;
+      connection.on("open", () => {
+        connectionInfo.textContent = "🟢 Adversário conectado! Você joga com " + mySymbol + ".";
+        if (isHost) sendState();
+        render();
+      });
+      connection.on("data", handleData);
+      connection.on("close", () => {
+        connectionInfo.textContent = "🔴 Conexão encerrada. Atualize a página para tentar novamente.";
+        render();
+      });
+      connection.on("error", err => {
+        connectionInfo.textContent = "Erro na conexão: " + err.message;
+      });
+    }
+
+    function createRoom() {
+      if (typeof Peer === "undefined") {
+        alert("Não foi possível carregar o serviço online. Verifique sua internet e recarregue a página.");
+        return;
+      }
+      cleanupOnline();
+      onlineMode = true; isHost = true; mySymbol = "X";
+      peer = new Peer();
+      onlinePanel.style.display = "block";
+      connectionInfo.textContent = "Criando sala...";
+      peer.on("open", id => {
+        roomCode = id;
+        roomInfo.innerHTML = "Código da sala:<br><strong style='font-size:18px;letter-spacing:1px;word-break:break-all'>" + id + "</strong><br>Envie este código para seu adversário.";
+        connectionInfo.textContent = "Aguardando o segundo jogador...";
+      });
+      peer.on("connection", conn => {
+        if (connection && connection.open) { conn.close(); return; }
+        mySymbol = "X";
+        setupConnection(conn);
+      });
+      peer.on("error", err => {
+        connectionInfo.textContent = "Não foi possível criar/conectar a sala: " + err.type;
+      });
+      newRound(false);
+      render();
+    }
+
+    function joinRoom() {
+      const code = prompt("Digite o código da sala enviado pelo jogador 1:");
+      if (!code || !code.trim()) return;
+      if (typeof Peer === "undefined") {
+        alert("Não foi possível carregar o serviço online. Verifique sua internet e recarregue a página.");
+        return;
+      }
+      cleanupOnline();
+      onlineMode = true; isHost = false; mySymbol = "O";
+      onlinePanel.style.display = "block";
+      roomInfo.textContent = "Entrando na sala: " + code.trim();
+      connectionInfo.textContent = "Conectando...";
+      peer = new Peer();
+      peer.on("open", () => {
+        const conn = peer.connect(code.trim(), { reliable:true });
+        setupConnection(conn);
+      });
+      peer.on("error", err => {
+        connectionInfo.textContent = "Falha ao entrar na sala: " + err.type + ". Confira o código.";
+      });
+      render();
+    }
+
+    function cleanupOnline() {
+      if (connection) { try { connection.close(); } catch(e) {} }
+      if (peer) { try { peer.destroy(); } catch(e) {} }
+      connection = null; peer = null; onlineMode = false; isHost = false;
+      roomCode = ""; onlinePanel.style.display = "none";
+    }
+
+    cells.forEach(cell => cell.addEventListener("click", () => play(Number(cell.dataset.index))));
+    document.getElementById("restart").addEventListener("click", () => newRound(true));
+    document.getElementById("reset").addEventListener("click", () => {
+      scoreX = 0; scoreO = 0; newRound(true);
+      if (onlineMode && connection && connection.open) connection.send({type:"score",scoreX,scoreO});
+    });
+    document.getElementById("createRoom").addEventListener("click", createRoom);
+    document.getElementById("joinRoom").addEventListener("click", joinRoom);
+    document.getElementById("copyRoom").addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(roomCode); connectionInfo.textContent = "Código copiado! Envie ao adversário."; }
+      catch(e) { alert("Código da sala: " + roomCode); }
+    });
+    render();
+  </script>
+</body>
+</html>
